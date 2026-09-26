@@ -1,0 +1,58 @@
+# Development environment: `docker compose up`
+name: refund-ai-system
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-refund_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_locally}
+      POSTGRES_DB: ${POSTGRES_DB:-refund_ai}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build: ./backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      PORT: 4000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-refund_admin}:${POSTGRES_PASSWORD:-change_me_locally}@postgres:5432/${POSTGRES_DB:-refund_ai}
+      CLIENT_URL: ${CLIENT_URL:-http://localhost:5173}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      AUTO_SEED: ${AUTO_SEED:-true}
+      DATABASE_DIR: /database
+    ports:
+      - "${PORT:-4000}:4000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - ./database:/database:ro
+    # Waits for DB, applies migrations, seeds if empty, then starts with auto-reload.
+    command: sh -c "npm run db:init && npm run dev"
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      - backend
+    environment:
+      # Resolved by the browser, so it points at the host-published backend port.
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:4000/api}
+      VITE_USE_POLLING: "true"
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+volumes:
+  postgres_data:
