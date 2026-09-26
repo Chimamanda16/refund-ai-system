@@ -72,63 +72,63 @@ INSERT INTO order_items (id, order_id, product_name, sku, quantity, unit_price, 
   (25, 18, 'Wireless Mouse',                      'ACC-MSE-WL',     1, 34.00,   FALSE),
   (26, 19, 'Insulated Water Bottle',              'HOM-BTL-INS',    1, 24.00,   FALSE);
 
--- Historical refund requests: customer 8 (refund history) and customer 15 (escalated).
-INSERT INTO refund_requests
-  (id, customer_id, order_id, requested_amount, reason, customer_message, status,
-   ai_category, ai_confidence, ai_summary, ai_suspicious, policy_result, policy_reason,
-   created_at, updated_at) VALUES
-  (1, 8, 8, 59.99, 'damaged',
-   'The speaker arrived with a cracked grille and the audio crackles at any volume.',
-   'approved', 'damaged_item', 0.940, 'Customer reports physical damage and audio defect on arrival.', FALSE,
-   'eligible', 'Damaged item reported within 30 days of delivery.',
-   NOW() - INTERVAL '82 days', NOW() - INTERVAL '81 days'),
-  (2, 8, 9, 24.99, 'not_as_described',
-   'The cable does not support the fast-charging speed listed on the product page.',
-   'approved', 'not_as_described', 0.880, 'Customer says cable does not meet advertised charging speed.', FALSE,
-   'eligible', 'Item not as described, reported within 30 days.',
-   NOW() - INTERVAL '48 days', NOW() - INTERVAL '47 days'),
-  (3, 8, 10, 34.00, 'changed_mind',
-   'I bought a duplicate mouse by mistake and would like to return it.',
-   'denied', 'change_of_mind', 0.970, 'Customer bought a duplicate and wants to return it.', FALSE,
-   'ineligible', 'Request submitted outside the 30-day return window.',
-   NOW() - INTERVAL '3 days', NOW() - INTERVAL '3 days'),
-  (4, 15, 18, 59.00, 'damaged',
-   'The stand arrived bent and the hinge will not lock. This is the third damaged delivery I have had from you.',
-   'escalated', 'damaged_item', 0.580, 'Bent laptop stand reported; claim references repeated damage that is not in our records.', TRUE,
-   'needs_review', 'Low AI confidence and suspicious-claim flag; routed to a human reviewer.',
-   NOW() - INTERVAL '4 days', NOW() - INTERVAL '3 days');
+-- -- Historical refund requests: customer 8 (refund history) and customer 15 (escalated).
+-- INSERT INTO refund_requests
+--   (id, customer_id, order_id, requested_amount, reason, customer_message, status,
+--    ai_category, ai_confidence, ai_summary, ai_suspicious, policy_result, policy_reason,
+--    created_at, updated_at) VALUES
+--   (1, 8, 8, 59.99, 'damaged',
+--    'The speaker arrived with a cracked grille and the audio crackles at any volume.',
+--    'approved', 'damaged_item', 0.940, 'Customer reports physical damage and audio defect on arrival.', FALSE,
+--    'eligible', 'Damaged item reported within 30 days of delivery.',
+--    NOW() - INTERVAL '82 days', NOW() - INTERVAL '81 days'),
+--   (2, 8, 9, 24.99, 'not_as_described',
+--    'The cable does not support the fast-charging speed listed on the product page.',
+--    'approved', 'not_as_described', 0.880, 'Customer says cable does not meet advertised charging speed.', FALSE,
+--    'eligible', 'Item not as described, reported within 30 days.',
+--    NOW() - INTERVAL '48 days', NOW() - INTERVAL '47 days'),
+--   (3, 8, 10, 34.00, 'changed_mind',
+--    'I bought a duplicate mouse by mistake and would like to return it.',
+--    'denied', 'change_of_mind', 0.970, 'Customer bought a duplicate and wants to return it.', FALSE,
+--    'ineligible', 'Request submitted outside the 30-day return window.',
+--    NOW() - INTERVAL '3 days', NOW() - INTERVAL '3 days'),
+--   (4, 15, 18, 59.00, 'damaged',
+--    'The stand arrived bent and the hinge will not lock. This is the third damaged delivery I have had from you.',
+--    'escalated', 'damaged_item', 0.580, 'Bent laptop stand reported; claim references repeated damage that is not in our records.', TRUE,
+--    'needs_review', 'Low AI confidence and suspicious-claim flag; routed to a human reviewer.',
+--    NOW() - INTERVAL '4 days', NOW() - INTERVAL '3 days');
 
-INSERT INTO refund_request_items (id, refund_request_id, order_item_id, requested_quantity, requested_amount) VALUES
-  (1, 1, 9,  1, 59.99),
-  (2, 2, 10, 1, 24.99),
-  (3, 3, 11, 1, 34.00),
-  (4, 4, 24, 1, 59.00);
+-- INSERT INTO refund_request_items (id, refund_request_id, order_item_id, requested_quantity, requested_amount) VALUES
+--   (1, 1, 9,  1, 59.99),
+--   (2, 2, 10, 1, 24.99),
+--   (3, 3, 11, 1, 34.00),
+--   (4, 4, 24, 1, 59.00);
 
-INSERT INTO refund_messages (refund_request_id, sender_type, message, created_at) VALUES
-  (1, 'customer', 'The speaker arrived with a cracked grille and the audio crackles at any volume.', NOW() - INTERVAL '82 days'),
-  (1, 'system',   'Your refund of $59.99 has been approved.', NOW() - INTERVAL '81 days'),
-  (2, 'customer', 'The cable does not support the fast-charging speed listed on the product page.', NOW() - INTERVAL '48 days'),
-  (2, 'system',   'Your refund of $24.99 has been approved.', NOW() - INTERVAL '47 days'),
-  (3, 'customer', 'I bought a duplicate mouse by mistake and would like to return it.', NOW() - INTERVAL '3 days'),
-  (3, 'system',   'Your request was denied because the 30-day return window has passed.', NOW() - INTERVAL '3 days'),
-  (4, 'customer', 'The stand arrived bent and the hinge will not lock. This is the third damaged delivery I have had from you.', NOW() - INTERVAL '4 days'),
-  (4, 'system',   'Your request has been passed to a specialist for review.', NOW() - INTERVAL '3 days'),
-  (4, 'admin',    'Could you send a photo of the stand and the outer packaging?', NOW() - INTERVAL '2 days');
+-- INSERT INTO refund_messages (refund_request_id, sender_type, message, created_at) VALUES
+--   (1, 'customer', 'The speaker arrived with a cracked grille and the audio crackles at any volume.', NOW() - INTERVAL '82 days'),
+--   (1, 'system',   'Your refund of $59.99 has been approved.', NOW() - INTERVAL '81 days'),
+--   (2, 'customer', 'The cable does not support the fast-charging speed listed on the product page.', NOW() - INTERVAL '48 days'),
+--   (2, 'system',   'Your refund of $24.99 has been approved.', NOW() - INTERVAL '47 days'),
+--   (3, 'customer', 'I bought a duplicate mouse by mistake and would like to return it.', NOW() - INTERVAL '3 days'),
+--   (3, 'system',   'Your request was denied because the 30-day return window has passed.', NOW() - INTERVAL '3 days'),
+--   (4, 'customer', 'The stand arrived bent and the hinge will not lock. This is the third damaged delivery I have had from you.', NOW() - INTERVAL '4 days'),
+--   (4, 'system',   'Your request has been passed to a specialist for review.', NOW() - INTERVAL '3 days'),
+--   (4, 'admin',    'Could you send a photo of the stand and the outer packaging?', NOW() - INTERVAL '2 days');
 
-INSERT INTO audit_logs (refund_request_id, actor_type, actor_id, action, previous_status, new_status, reason, metadata, created_at) VALUES
-  (1, 'customer', '8',     'refund_request_created', NULL,      'pending',   NULL, '{"source": "seed"}', NOW() - INTERVAL '82 days'),
-  (1, 'admin',    'maria', 'refund_approved',        'pending', 'approved',  'Damage confirmed from photos.', '{"source": "seed"}', NOW() - INTERVAL '81 days'),
-  (2, 'customer', '8',     'refund_request_created', NULL,      'pending',   NULL, '{"source": "seed"}', NOW() - INTERVAL '48 days'),
-  (2, 'admin',    'maria', 'refund_approved',        'pending', 'approved',  'Listing was misleading.', '{"source": "seed"}', NOW() - INTERVAL '47 days'),
-  (3, 'customer', '8',     'refund_request_created', NULL,      'pending',   NULL, '{"source": "seed"}', NOW() - INTERVAL '3 days'),
-  (3, 'system',   NULL,    'refund_denied',          'pending', 'denied',    'Outside 30-day window.', '{"source": "seed", "days_since_order": 32}', NOW() - INTERVAL '3 days'),
-  (4, 'customer', '15',    'refund_request_created', NULL,      'pending',   NULL, '{"source": "seed"}', NOW() - INTERVAL '4 days'),
-  (4, 'system',   NULL,    'refund_escalated',       'pending', 'escalated', 'Suspicious-claim flag and low confidence.', '{"source": "seed", "ai_confidence": 0.58}', NOW() - INTERVAL '3 days');
+-- INSERT INTO audit_logs (refund_request_id, actor_type, actor_id, action, previous_status, new_status, reason, metadata, created_at) VALUES
+--   (1, 'customer', '8',     'refund_request_created', NULL,      'pending',   NULL, '{"source": "seed"}', NOW() - INTERVAL '82 days'),
+--   (1, 'admin',    'maria', 'refund_approved',        'pending', 'approved',  'Damage confirmed from photos.', '{"source": "seed"}', NOW() - INTERVAL '81 days'),
+--   (2, 'customer', '8',     'refund_request_created', NULL,      'pending',   NULL, '{"source": "seed"}', NOW() - INTERVAL '48 days'),
+--   (2, 'admin',    'maria', 'refund_approved',        'pending', 'approved',  'Listing was misleading.', '{"source": "seed"}', NOW() - INTERVAL '47 days'),
+--   (3, 'customer', '8',     'refund_request_created', NULL,      'pending',   NULL, '{"source": "seed"}', NOW() - INTERVAL '3 days'),
+--   (3, 'system',   NULL,    'refund_denied',          'pending', 'denied',    'Outside 30-day window.', '{"source": "seed", "days_since_order": 32}', NOW() - INTERVAL '3 days'),
+--   (4, 'customer', '15',    'refund_request_created', NULL,      'pending',   NULL, '{"source": "seed"}', NOW() - INTERVAL '4 days'),
+--   (4, 'system',   NULL,    'refund_escalated',       'pending', 'escalated', 'Suspicious-claim flag and low confidence.', '{"source": "seed", "ai_confidence": 0.58}', NOW() - INTERVAL '3 days');
 
-INSERT INTO admin_notes (refund_request_id, admin_name, note, created_at) VALUES
-  (3, 'Maria Santos', 'Customer has two prior approved refunds. Denial follows policy; no exception recommended.', NOW() - INTERVAL '2 days'),
-  (4, 'Maria Santos', 'No earlier damage claims on this account, so the "third damaged delivery" statement is unverified.', NOW() - INTERVAL '3 days'),
-  (4, 'Maria Santos', 'Photos requested. Hold until the customer replies.', NOW() - INTERVAL '2 days');
+-- INSERT INTO admin_notes (refund_request_id, admin_name, note, created_at) VALUES
+--   (3, 'Maria Santos', 'Customer has two prior approved refunds. Denial follows policy; no exception recommended.', NOW() - INTERVAL '2 days'),
+--   (4, 'Maria Santos', 'No earlier damage claims on this account, so the "third damaged delivery" statement is unverified.', NOW() - INTERVAL '3 days'),
+--   (4, 'Maria Santos', 'Photos requested. Hold until the customer replies.', NOW() - INTERVAL '2 days');
 
 -- Explicit ids were used above, so move each sequence past the highest id.
 SELECT setval(pg_get_serial_sequence('customers', 'id'),             (SELECT MAX(id) FROM customers));

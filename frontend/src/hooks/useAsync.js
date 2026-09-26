@@ -9,7 +9,7 @@ export function useAsync(fn, deps = []) {
 
   useEffect(() => {
     const controller = new AbortController();
-    setState((prev) => ({ ...prev, error: null, loading: true }));
+    setState({ data: null, error: null, loading: true });
     fn(controller.signal)
       .then((data) => setState({ data, error: null, loading: false }))
       .catch((error) => {

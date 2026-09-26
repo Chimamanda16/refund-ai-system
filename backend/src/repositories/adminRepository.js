@@ -1,4 +1,5 @@
-import { query } from '../db/pool.js';
+import { query, withTransaction } from '../db/pool.js';
+import { insertAuditEvents } from './auditRepository.js';
 
 // ADMIN-ONLY. Never import this from customer-facing services/controllers.
 
@@ -48,4 +49,15 @@ export function findAuditLogs(refundId) {
        FROM audit_logs WHERE refund_request_id = $1 ORDER BY created_at, id`,
     [refundId],
   );
+}
+
+export function requestVerification(refundId, message) {
+  return withTransaction(async (client) => {
+    const rows = await client.query(`UPDATE refund_requests SET status = 'pending'
+      WHERE id = $1 AND status IN ('escalated', 'pending') RETURNING id`, [refundId]);
+    if (!rows.rows[0]) return false;
+    await client.query(`INSERT INTO refund_messages (refund_request_id, sender_type, message) VALUES ($1, 'admin', $2)`, [refundId, message]);
+    await insertAuditEvents(client, refundId, [{ action: 'verification_requested', metadata: {}, status: 'pending', reason: 'Additional customer information requested' }]);
+    return true;
+  });
 }

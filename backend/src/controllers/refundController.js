@@ -7,5 +7,11 @@ export async function createRefund(req, res) {
 
 export async function getRefund(req, res) {
   const { refundId } = req.validated.params;
-  res.json({ data: await refundService.getRefundForCustomer(refundId) });
+  const { customerId } = req.validated.query;
+  res.json({ data: await refundService.getRefundForCustomer(refundId, customerId) });
+}
+
+export async function replyToVerification(req, res) {
+  const { refundId } = req.validated.params;
+  res.json({ data: await refundService.replyToVerification(refundId, req.validated.body) });
 }

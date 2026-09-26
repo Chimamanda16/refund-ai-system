@@ -27,11 +27,26 @@ export async function findById(id) {
 export async function findItemsByOrderIds(orderIds) {
   if (orderIds.length === 0) return [];
   return query(
-    `SELECT id, order_id, product_name, sku, quantity, unit_price, is_final_sale,
-            (quantity * unit_price) AS line_total
-       FROM order_items
+    `SELECT oi.id, oi.order_id, oi.product_name, oi.sku, oi.quantity, oi.unit_price, oi.is_final_sale,
+            (oi.quantity * oi.unit_price) AS line_total,
+            CASE WHEN EXISTS (SELECT 1 FROM refund_request_items ri WHERE ri.order_item_id = oi.id)
+              THEN 0 ELSE oi.quantity END AS remaining_quantity
+       FROM order_items oi
       WHERE order_id = ANY($1::int[])
-      ORDER BY order_id, id`,
+      ORDER BY oi.order_id, oi.id`,
     [orderIds],
+  );
+}
+
+export async function findItemsByOrderId(orderId) {
+  return query(
+    `SELECT oi.id, oi.order_id, oi.product_name, oi.sku, oi.quantity, oi.unit_price, oi.is_final_sale,
+            (oi.quantity * oi.unit_price) AS line_total,
+            CASE WHEN EXISTS (SELECT 1 FROM refund_request_items ri WHERE ri.order_item_id = oi.id)
+              THEN 0 ELSE oi.quantity END AS remaining_quantity
+       FROM order_items oi
+      WHERE oi.order_id = $1
+      ORDER BY oi.order_id, oi.id`,
+    [orderId],
   );
 }

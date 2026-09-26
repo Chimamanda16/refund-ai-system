@@ -26,3 +26,9 @@ export async function getRefundDetail(refundId) {
   ]);
   return { ...refund, items, messages, notes, auditLogs };
 }
+
+export async function requestVerification(refundId, message) {
+  const updated = await adminRepository.requestVerification(refundId, message);
+  if (!updated) throw new NotFoundError('Open refund request');
+  return getRefundDetail(refundId);
+}
