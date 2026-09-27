@@ -19,6 +19,7 @@ export default function AdminDashboardPage() {
   const [detail, setDetail] = useState(null);
   const [detailError, setDetailError] = useState(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [verificationMessage, setVerificationMessage] = useState('');
   const [sendingVerification, setSendingVerification] = useState(false);
   const [verificationError, setVerificationError] = useState(null);
@@ -40,6 +41,32 @@ export default function AdminDashboardPage() {
       setVerificationMessage('');
     } catch (error) { setVerificationError(error); }
     finally { setSendingVerification(false); }
+  }
+
+  async function approveRefund(id){
+    setLoading(true);
+    try{
+      await api.approveRefund(id);
+    }
+    catch(error){
+      console.error(error);
+    }
+    finally{
+      setLoading(false);
+    }
+  }
+
+  async function rejectRefund(id){
+    setLoading(true);
+    try{
+      await api.rejectRefund(id);
+    }
+    catch(error){
+      console.error(error);
+    }
+    finally{
+      setLoading(false);
+    }
   }
 
   return (
@@ -98,7 +125,7 @@ export default function AdminDashboardPage() {
                         </span>
                         {r.aiSuspicious && <span className="type-label ml-2 text-launch-orange">Flagged</span>}
                       </td>
-                      <td className="py-4"><button type="button" onClick={() => inspectRefund(r.id)}>Review</button></td>
+                        <td className="py-4"><button className='cursor-pointer' type="button" onClick={() => inspectRefund(r.id)}>Review</button></td>
                     </tr>
                   ))}
                 </tbody>
@@ -113,7 +140,20 @@ export default function AdminDashboardPage() {
             {detail.aiCategory && <p className="type-small mt-3 text-slate">AI: {detail.aiCategory} · confidence {detail.aiConfidence ?? '—'}{detail.aiSuspicious ? ' · flagged' : ''}</p>}
             <ul className="mt-4 divide-y divide-hairline-silver">{detail.items?.map((item) => <li key={item.id} className="py-2">{item.productName} · Qty {item.requestedQuantity} · {formatMoney(item.requestedAmount)}</li>)}</ul>
             {detail.auditLogs?.length > 0 && <div className="mt-4"><h4 className="font-semibold">Audit history</h4><ul className="mt-2 space-y-2">{detail.auditLogs.map((event) => <li key={event.id} className="type-small text-slate">{event.action} · {formatDate(event.createdAt)}{event.reason ? ` · ${event.reason}` : ''}</li>)}</ul></div>}
-            {['pending', 'escalated'].includes(detail.status) && <form className="mt-6 border-t border-hairline-silver pt-5" onSubmit={askForVerification}><label className="block text-sm font-semibold" htmlFor="verification-message">Request more information</label><p className="type-small mt-1 text-slate">This message will be visible to the customer and move the request to pending.</p><textarea id="verification-message" className="field mt-3 min-h-24 resize-y rounded-2xl" maxLength="2000" value={verificationMessage} onChange={(event) => setVerificationMessage(event.target.value)} required placeholder="Explain what information support needs." />{verificationError && <div className="mt-3"><ErrorNotice error={verificationError} /></div>}<button className="pill-blue mt-3" type="submit" disabled={sendingVerification || !verificationMessage.trim()}>{sendingVerification ? 'Sending…' : 'Send verification request'}</button></form>}
+            {(detail.status !== "approved") && (detail.status !== "denied") &&
+              <div className='gap-4 flex cursor-pointer'>
+
+                <button className="pill-blue mt-3 cursor-pointer" type="submit" onClick={() => rejectRefund(detail.id)}>{loading ? "Loading": "Reject"}</button>
+                <button className="pill-blue mt-3 cursor-pointer" type="submit" onClick={() => approveRefund(detail.id)}>{loading ? "Loading": "Accept"}</button>
+              </div>
+            }
+            {['pending', 'escalated'].includes(detail.status) && 
+              <form className="mt-6 border-t border-hairline-silver pt-5" onSubmit={askForVerification}><label className="block text-sm font-semibold" htmlFor="verification-message">Request more information</label><p className="type-small mt-1 text-slate">This message will be visible to the customer and move the request to pending.</p><textarea id="verification-message" className="field mt-3 min-h-24 resize-y rounded-2xl" maxLength="2000" value={verificationMessage} onChange={(event) => setVerificationMessage(event.target.value)} required placeholder="Explain what information support needs." />{verificationError && <div className="mt-3"><ErrorNotice error={verificationError} /></div>}
+                <button className="pill-blue mt-3" type="submit" disabled={sendingVerification || !verificationMessage.trim()}>
+                  {sendingVerification ? 'Sending…' : 'Send verification request'}
+                </button>
+              </form>
+            }
           </article>}
         </div>
       </section>

@@ -18,3 +18,13 @@ export async function requestVerification(req, res) {
   const { message } = req.validated.body;
   res.json({ data: await adminService.requestVerification(refundId, message) });
 }
+
+export async function approveRefund(req, res) {
+  const { refundId } = req.validated.params;
+  res.json({ data: await adminService.approveRefund(refundId) });
+}
+
+export async function rejectRefund(req, res) {
+  const { refundId } = req.validated.params;
+  res.json({ data: await adminService.rejectRefund(refundId) });
+}

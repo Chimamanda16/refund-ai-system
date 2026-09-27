@@ -32,3 +32,15 @@ export async function requestVerification(refundId, message) {
   if (!updated) throw new NotFoundError('Open refund request');
   return getRefundDetail(refundId);
 }
+
+export async function approveRefund(refundId) {
+  const updated = await adminRepository.approveRefund(refundId);
+  if (!updated) throw new NotFoundError('Open refund request');
+  return getRefundDetail(refundId);
+}
+
+export async function rejectRefund(refundId) {
+  const updated = await adminRepository.rejectRefund(refundId);
+  if (!updated) throw new NotFoundError('Open refund request');
+  return getRefundDetail(refundId);
+}

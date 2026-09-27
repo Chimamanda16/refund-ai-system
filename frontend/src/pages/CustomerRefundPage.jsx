@@ -131,9 +131,13 @@ export default function CustomerRefundPage() {
             <div className="space-y-3">
               {selectedOrder.items.map((item) => {
                 const remaining = item.remainingQuantity ?? item.quantity;
-                return <div key={item.id} className="flex flex-col gap-3 rounded-2xl border border-hairline-silver p-4 sm:flex-row sm:items-center sm:justify-between">
-                  <label className="flex items-start gap-3"><input className="mt-1 h-5 w-5 accent-[#0071e3]" type="checkbox" checked={Number(selectedItems[item.id] ?? 0) > 0} disabled={remaining < 1} onChange={(event) => quantityFor(item, event.target.checked ? 1 : 0)} /><span><span className="block font-medium">{item.productName}</span><span className="type-small text-slate">Qty {item.quantity} · {formatMoney(item.unitPrice, selectedOrder.currency)} each{item.isFinalSale ? ' · Final sale' : ''}</span></span></label>
+                return <div key={item.id} className="rounded-2xl border border-hairline-silver p-4">
+                  <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+
+                  <label className="flex items-start gap-3"><input className="mt-1 h-5 w-5 accent-[#0071e3]" type="checkbox" checked={Number(selectedItems[item.id] ?? 0) > 0} disabled={remaining < 1 || item.isFinalSale} onChange={(event) => quantityFor(item, event.target.checked ? 1 : 0)} /><span><span className="block font-medium">{item.productName}</span><span className="type-small text-slate">Qty {item.quantity} · {formatMoney(item.unitPrice, selectedOrder.currency)} each{item.isFinalSale ? ' · Final sale' : ''}</span></span></label>
                   <label className="type-small flex items-center gap-2 text-slate">Quantity <input aria-label={`Quantity for ${item.productName}`} className="field max-w-24 px-3 py-2" type="number" min="0" max={remaining} value={selectedItems[item.id] ?? 0} disabled={remaining < 1} onChange={(event) => quantityFor(item, event.target.value)} /><span>of {remaining}</span></label>
+                  </div>
+                  { item.isFinalSale && <p className='text-red-600'>Item cannot be selected as it is a final sale item</p>}
                 </div>;
               })}
             </div>

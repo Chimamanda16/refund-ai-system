@@ -10,4 +10,7 @@ router.get('/dashboard', controller.getDashboard);
 router.get('/refunds', validate({ query: adminRefundListQuery }), controller.listRefunds);
 router.get('/refunds/:refundId', validate({ params: refundIdParams }), controller.getRefund);
 router.post('/refunds/:refundId/verification', validate({ params: refundIdParams, body: verificationMessageBody }), controller.requestVerification);
+router.patch('/refunds/:refundId/approve', validate({ params: refundIdParams }), controller.approveRefund);
+router.patch('/refunds/:refundId/reject', validate({ params: refundIdParams }), controller.rejectRefund);
+
 export default router;

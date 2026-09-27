@@ -61,3 +61,23 @@ export function requestVerification(refundId, message) {
     return true;
   });
 }
+
+export function approveRefund(refundId) {
+  return withTransaction(async (client) => {
+    const rows = await client.query(`UPDATE refund_requests SET status = 'approved'
+      WHERE id = $1 AND status IN ('escalated', 'pending') RETURNING id`, [refundId]);
+    if (!rows.rows[0]) return false;
+    await insertAuditEvents(client, refundId, [{ action: 'refund_approved', metadata: {}, status: 'approved', reason: 'Request was approved after manual review' }]);
+    return true;
+  });
+}
+
+export function rejectRefund(refundId) {
+  return withTransaction(async (client) => {
+    const rows = await client.query(`UPDATE refund_requests SET status = 'denied'
+      WHERE id = $1 AND status IN ('escalated', 'pending') RETURNING id`, [refundId]);
+    if (!rows.rows[0]) return false;
+    await insertAuditEvents(client, refundId, [{ action: 'refund_approved', metadata: {}, status: 'denied', reason: 'Request was rejected after manual review' }]);
+    return true;
+  });
+}
