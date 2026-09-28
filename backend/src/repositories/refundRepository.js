@@ -5,7 +5,8 @@ import { AppError } from '../utils/errors.js';
 export async function findCustomerViewById(id, customerId) {
   const rows = await query(
     `SELECT r.id, r.customer_id, r.order_id, o.order_number, o.order_date, o.status AS order_status,
-            o.currency, r.requested_amount, r.reason, r.customer_message, r.status, r.created_at, r.updated_at
+            o.currency, r.requested_amount, r.reason, r.customer_message, r.status,
+            r.policy_result, r.policy_reason, r.resolution_reason, r.created_at, r.updated_at
        FROM refund_requests r JOIN orders o ON o.id = r.order_id
       WHERE r.id = $1 AND r.customer_id = $2`, [id, customerId]);
   return rows[0] ?? null;
@@ -89,16 +90,22 @@ export function createWithAudit(data) {
 }
 
 export async function addCustomerMessage(refundId, customerId, message) {
+  return addMessage(refundId, 'customer', message, customerId);
+}
+
+export async function addAdminMessage(refundId, message) {
+  return addMessage(refundId, 'admin', message);
+}
+
+async function addMessage(refundId, senderType, message, customerId = null) {
   return withTransaction(async (client) => {
-    const rows = await client.query(`SELECT id, status FROM refund_requests WHERE id = $1 AND customer_id = $2 FOR UPDATE`, [refundId, customerId]);
+    const rows = await client.query(`SELECT id, status FROM refund_requests WHERE id = $1 AND ($2::int IS NULL OR customer_id = $2) FOR UPDATE`, [refundId, customerId]);
     const refund = rows.rows[0];
     if (!refund) return null;
-    if (refund.status !== 'pending') throw new AppError(409, 'VERIFICATION_NOT_PENDING', 'This request is not waiting for verification.');
-    const last = await client.query(`SELECT sender_type FROM refund_messages WHERE refund_request_id = $1 ORDER BY created_at DESC, id DESC LIMIT 1`, [refundId]);
-    if (last.rows[0]?.sender_type !== 'admin') throw new AppError(409, 'VERIFICATION_NOT_REQUESTED', 'Support has not requested additional information on this request.');
-    await client.query(`INSERT INTO refund_messages (refund_request_id, sender_type, message) VALUES ($1, 'customer', $2)`, [refundId, message]);
+    if (!['pending', 'escalated'].includes(refund.status)) throw new AppError(409, 'REQUEST_CLOSED', 'Messages are available while the request is open.');
+    await client.query(`INSERT INTO refund_messages (refund_request_id, sender_type, message) VALUES ($1, $2, $3)`, [refundId, senderType, message]);
     await client.query(`INSERT INTO audit_logs (refund_request_id, actor_type, actor_id, action, new_status, metadata)
-      VALUES ($1, 'customer', $2, 'customer_verification_response', $3, '{}'::jsonb)`, [refundId, String(customerId), refund.status]);
+      VALUES ($1, $2, $3, $4, $5, '{}'::jsonb)`, [refundId, senderType, customerId ? String(customerId) : null, `${senderType}_message_sent`, refund.status]);
     return refund.id;
   });
 }

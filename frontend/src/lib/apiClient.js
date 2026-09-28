@@ -50,6 +50,7 @@ export const api = {
   getAdminRefunds: (signal) => request('/admin/refunds', { signal }),
   getAdminRefund: (refundId, signal) => request(`/admin/refunds/${refundId}`, { signal }),
   requestVerification: (refundId, message) => request(`/admin/refunds/${refundId}/verification`, { method: 'POST', body: { message } }),
-  approveRefund: (refundId) => request(`/admin/refunds/${refundId}/approve`, { method: 'PATCH' }),
-  rejectRefund: (refundId) => request(`/admin/refunds/${refundId}/reject`, { method: 'PATCH' }),
+  sendAdminMessage: (refundId, message) => request(`/admin/refunds/${refundId}/messages`, { method: 'POST', body: { message } }),
+  approveRefund: (refundId, reason) => request(`/admin/refunds/${refundId}/approve`, { method: 'PATCH', body: { reason } }),
+  rejectRefund: (refundId, reason) => request(`/admin/refunds/${refundId}/reject`, { method: 'PATCH', body: { reason } }),
 };

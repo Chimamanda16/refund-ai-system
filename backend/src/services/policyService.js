@@ -5,8 +5,19 @@ const QUALIFYING_CATEGORIES = new Set(['damaged_item', 'incorrect_item']);
 
 export function evaluatePolicy({ isRequestValid, invalidReason, legitimateAmount, hasFinalSaleItem, orderCreatedAt, aiResult }) {
   if (!isRequestValid) return { decision: DECISIONS.DENIED, code: 'INVALID_REQUEST', reason: invalidReason || 'The request could not be validated against order data.' };
-  if (!aiResult.valid || aiResult.classification.suspicious || aiResult.classification.conflicts.length) {
-    return { decision: DECISIONS.ESCALATED, code: 'SUSPICIOUS_OR_CONFLICTING', reason: 'This request needs a human review.' };
+  if (!aiResult.valid) {
+    const detail = {
+      AI_UNAVAILABLE: 'AI classification is unavailable because no API key is configured.',
+      AI_REQUEST_FAILED: 'AI classification could not be completed because the classification service request failed.',
+      AI_MALFORMED_OUTPUT: 'AI classification returned a response that did not match the required fields.',
+    }[aiResult.reason] || 'AI classification could not be completed.';
+    return { decision: DECISIONS.ESCALATED, code: aiResult.reason || 'AI_CLASSIFICATION_FAILED', reason: `${detail} Human review is required.` };
+  }
+  if (aiResult.classification.suspicious || aiResult.classification.conflicts.length) {
+    const details = [];
+    if (aiResult.classification.suspicious) details.push('AI marked the request as suspicious.');
+    if (aiResult.classification.conflicts.length) details.push(`AI found conflicting information: ${aiResult.classification.conflicts.join('; ')}`);
+    return { decision: DECISIONS.ESCALATED, code: 'SUSPICIOUS_OR_CONFLICTING', reason: `${details.join(' ')} Human review is required.` };
   }
   if (legitimateAmount > ESCALATION_AMOUNT_THRESHOLD) return { decision: DECISIONS.ESCALATED, code: 'AMOUNT_ABOVE_THRESHOLD', reason: `Requests above $${ESCALATION_AMOUNT_THRESHOLD.toFixed(2)} are sent for review.` };
   if (hasFinalSaleItem) return { decision: DECISIONS.DENIED, code: 'FINAL_SALE_ITEM', reason: 'One or more selected items are final sale.' };

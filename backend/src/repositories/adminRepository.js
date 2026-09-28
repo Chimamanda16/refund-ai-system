@@ -62,22 +62,22 @@ export function requestVerification(refundId, message) {
   });
 }
 
-export function approveRefund(refundId) {
+export function approveRefund(refundId, reason) {
   return withTransaction(async (client) => {
-    const rows = await client.query(`UPDATE refund_requests SET status = 'approved'
-      WHERE id = $1 AND status IN ('escalated', 'pending') RETURNING id`, [refundId]);
+    const rows = await client.query(`UPDATE refund_requests SET status = 'approved', resolution_reason = $2
+      WHERE id = $1 AND status IN ('escalated', 'pending') RETURNING id`, [refundId, reason]);
     if (!rows.rows[0]) return false;
-    await insertAuditEvents(client, refundId, [{ action: 'refund_approved', metadata: {}, status: 'approved', reason: 'Request was approved after manual review' }]);
+    await insertAuditEvents(client, refundId, [{ action: 'refund_approved', metadata: {}, status: 'approved', reason }]);
     return true;
   });
 }
 
-export function rejectRefund(refundId) {
+export function rejectRefund(refundId, reason) {
   return withTransaction(async (client) => {
-    const rows = await client.query(`UPDATE refund_requests SET status = 'denied'
-      WHERE id = $1 AND status IN ('escalated', 'pending') RETURNING id`, [refundId]);
+    const rows = await client.query(`UPDATE refund_requests SET status = 'denied', resolution_reason = $2
+      WHERE id = $1 AND status IN ('escalated', 'pending') RETURNING id`, [refundId, reason]);
     if (!rows.rows[0]) return false;
-    await insertAuditEvents(client, refundId, [{ action: 'refund_approved', metadata: {}, status: 'denied', reason: 'Request was rejected after manual review' }]);
+    await insertAuditEvents(client, refundId, [{ action: 'refund_rejected', metadata: {}, status: 'denied', reason }]);
     return true;
   });
 }

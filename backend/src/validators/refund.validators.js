@@ -29,3 +29,7 @@ export const customerMessageBody = z.object({
 export const verificationMessageBody = z.object({
   message: z.string().trim().min(1).max(2000),
 });
+
+export const decisionReasonBody = z.object({
+  reason: z.string().trim().min(1).max(2000),
+});

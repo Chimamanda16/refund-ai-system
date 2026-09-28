@@ -51,6 +51,7 @@ CREATE TABLE refund_requests (
   ai_suspicious     BOOLEAN,
   policy_result     VARCHAR(40),
   policy_reason     TEXT,
+  resolution_reason TEXT,
   created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

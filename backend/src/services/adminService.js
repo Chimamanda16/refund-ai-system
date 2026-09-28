@@ -33,14 +33,20 @@ export async function requestVerification(refundId, message) {
   return getRefundDetail(refundId);
 }
 
-export async function approveRefund(refundId) {
-  const updated = await adminRepository.approveRefund(refundId);
+export async function approveRefund(refundId, reason) {
+  const updated = await adminRepository.approveRefund(refundId, reason);
   if (!updated) throw new NotFoundError('Open refund request');
   return getRefundDetail(refundId);
 }
 
-export async function rejectRefund(refundId) {
-  const updated = await adminRepository.rejectRefund(refundId);
+export async function rejectRefund(refundId, reason) {
+  const updated = await adminRepository.rejectRefund(refundId, reason);
   if (!updated) throw new NotFoundError('Open refund request');
   return getRefundDetail(refundId);
+}
+
+export async function sendMessage(refundId, message) {
+  const id = await refundRepository.addAdminMessage(refundId, message);
+  if (!id) throw new NotFoundError('Refund request');
+  return getRefundDetail(id);
 }

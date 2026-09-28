@@ -204,6 +204,7 @@ export default function CustomerRefundPage() {
             </div>
             <div className="mt-4"><StatusLabel status={submission.status} /></div>
             <p className="mt-4">{submission.systemResponse}</p>
+            {submission.policyReason && <p className="mt-3 rounded-xl bg-studio-mist p-4 text-sm"><span className="font-semibold">Decision details: </span>{submission.policyReason}</p>}
             <p className="mt-2 text-sm text-slate">Requested amount: {formatMoney(submission.requestedAmount, selectedOrder?.currency)}</p>
             {submission.status === 'escalated' && <p className="mt-3 rounded-xl bg-studio-mist p-4 text-sm">This request needs support review. You can follow updates in Request history.</p>}
             <button type="button" className="pill-blue mt-6" onClick={() => { setStage('select'); setSelectedOrderId(''); setSelectedItems({}); setMessage(''); }}>Start another request</button>
@@ -229,13 +230,14 @@ export default function CustomerRefundPage() {
             {detail && <>
               <StatusLabel status={detail.status} />
               <p className="mt-4">{detail.systemResponse}</p>
+              {(detail.policyReason || detail.resolutionReason) && <div className="mt-4 rounded-xl bg-studio-mist p-3 text-sm"><p className="font-semibold">Decision details</p>{detail.policyReason && <p className="mt-1">{detail.policyReason}</p>}{detail.resolutionReason && <p className="mt-2"><span className="font-medium">Support decision: </span>{detail.resolutionReason}</p>}</div>}
               <dl className="mt-4 space-y-2 text-sm"><div><dt className="inline text-slate">Order: </dt><dd className="type-mono-id inline">{detail.orderNumber} · {formatDate(detail.orderDate)} · {capitalize(detail.orderStatus)}</dd></div><div><dt className="inline text-slate">Amount: </dt><dd className="inline font-medium">{formatMoney(detail.requestedAmount, detail.currency)}</dd></div><div><dt className="inline text-slate">Reason: </dt><dd className="inline">{capitalize(detail.reason.replaceAll('_', ' '))}</dd></div></dl>
               <ul className="mt-3 divide-y divide-hairline-silver">{detail.items.map((item) => <li key={item.id} className="py-2 text-sm">{item.productName} · Qty {item.requestedQuantity} · {formatMoney(item.requestedAmount, detail.currency)}</li>)}</ul>
               {detail.customerMessage && <div className="mt-3 rounded-xl bg-studio-mist p-3"><p className="type-label font-semibold text-slate">Your original explanation</p><p className="mt-1 whitespace-pre-wrap text-sm">{detail.customerMessage}</p></div>}
               <h3 className="mt-5 font-semibold">Conversation</h3>
               {detail.messages.length === 0 && <p className="mt-2 text-sm text-slate">No messages yet.</p>}
               <ul className="mt-2 space-y-3">{detail.messages.map((entry) => <li key={entry.id} className={`rounded-xl p-3 text-sm ${entry.senderType === 'customer' ? 'bg-[#f5faff]' : 'bg-studio-mist'}`}><p className="type-label mb-1 font-semibold text-slate">{entry.senderType === 'admin' ? 'Support' : entry.senderType === 'customer' ? 'You' : 'Refund update'} · {formatDate(entry.createdAt)}</p><p className="whitespace-pre-wrap">{entry.message}</p></li>)}</ul>
-              {detail.verificationRequested ? <form className="mt-5 space-y-3" onSubmit={sendReply}><label htmlFor="verification-reply" className="block text-sm font-medium">Reply to support</label><textarea id="verification-reply" className="field min-h-28 resize-y rounded-2xl" maxLength="2000" value={reply} onChange={(event) => setReply(event.target.value)} required placeholder="Share the requested information." />{replyError && <ErrorNotice error={replyError} />}<button className="pill-blue" disabled={replying || !reply.trim()} type="submit">{replying ? 'Sending…' : 'Send reply'}</button></form> : detail.awaitingSupport && <p className="mt-4 rounded-xl bg-studio-mist p-3 text-sm">Your reply was received. This request is awaiting support review.</p>}
+              {['pending', 'escalated'].includes(detail.status) && <form className="mt-5 space-y-3" onSubmit={sendReply}><label htmlFor="verification-reply" className="block text-sm font-medium">Message support</label><textarea id="verification-reply" className="field min-h-28 resize-y rounded-2xl" maxLength="2000" value={reply} onChange={(event) => setReply(event.target.value)} required placeholder="Write a message about this request." />{replyError && <ErrorNotice error={replyError} />}<button className="pill-blue" disabled={replying || !reply.trim()} type="submit">{replying ? 'Sending…' : 'Send message'}</button></form>}
             </>}
           </section>}
         </aside>

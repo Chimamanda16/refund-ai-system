@@ -75,15 +75,22 @@ export default function AdminDashboardPage() {
   const [detailError, setDetailError] = useState(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [decision, setDecision] = useState('');
+  const [decisionReason, setDecisionReason] = useState('');
+  const [actionError, setActionError] = useState(null);
+  const [chatMessage, setChatMessage] = useState('');
+  const [sendingChat, setSendingChat] = useState(false);
+  const [chatError, setChatError] = useState(null);
   const [verificationMessage, setVerificationMessage] = useState('');
   const [sendingVerification, setSendingVerification] = useState(false);
   const [verificationError, setVerificationError] = useState(null);
-  const dashboard = useAsync((signal) => api.getAdminDashboard(signal), []);
-  const refunds = useAsync((signal) => api.getAdminRefunds(signal), []);
+  const [refresh, setRefresh] = useState(0);
+  const dashboard = useAsync((signal) => api.getAdminDashboard(signal), [refresh]);
+  const refunds = useAsync((signal) => api.getAdminRefunds(signal), [refresh]);
 
   async function inspectRefund(id) {
     setLoadingDetail(true); setDetailError(null);
-    setVerificationMessage(''); setVerificationError(null);
+    setVerificationMessage(''); setVerificationError(null); setDecisionReason(''); setActionError(null); setChatMessage(''); setChatError(null);
     try { setDetail(await api.getAdminRefund(id)); } catch (error) { setDetailError(error); } finally { setLoadingDetail(false); }
   }
 
@@ -98,30 +105,24 @@ export default function AdminDashboardPage() {
     finally { setSendingVerification(false); }
   }
 
-  async function approveRefund(id){
-    setLoading(true);
-    try{
-      await api.approveRefund(id);
-    }
-    catch(error){
-      console.error(error);
-    }
-    finally{
-      setLoading(false);
-    }
+  async function decideRefund(action) {
+    if (!detail || !decisionReason.trim()) return;
+    setLoading(true); setDecision(action); setActionError(null);
+    try {
+      setDetail(action === 'approve' ? await api.approveRefund(detail.id, decisionReason.trim()) : await api.rejectRefund(detail.id, decisionReason.trim()));
+      setDecisionReason('');
+      setRefresh((value) => value + 1);
+    } catch (error) { setActionError(error); }
+    finally { setLoading(false); setDecision(''); }
   }
 
-  async function rejectRefund(id){
-    setLoading(true);
-    try{
-      await api.rejectRefund(id);
-    }
-    catch(error){
-      console.error(error);
-    }
-    finally{
-      setLoading(false);
-    }
+  async function sendChat(event) {
+    event.preventDefault();
+    if (!detail || !chatMessage.trim()) return;
+    setSendingChat(true); setChatError(null);
+    try { setDetail(await api.sendAdminMessage(detail.id, chatMessage.trim())); setChatMessage(''); }
+    catch (error) { setChatError(error); }
+    finally { setSendingChat(false); }
   }
 
   return (
@@ -225,7 +226,7 @@ export default function AdminDashboardPage() {
                 <button className="pill-ghost" type="button" onClick={() => setDetail(null)} aria-label="Close request details">Close</button>
               </div>
             </div>
-            <p className="mt-5">{detail.policyReason || detail.reason}</p>
+            <div className="mt-5 rounded-xl bg-studio-mist p-4"><p className="type-label font-semibold text-slate">Automated decision reason</p><p className="mt-1">{detail.policyReason || detail.reason}</p>{detail.resolutionReason && <><p className="type-label mt-3 font-semibold text-slate">Final decision reason</p><p className="mt-1">{detail.resolutionReason}</p></>}</div>
             {detail.aiCategory && (
               <p className="type-small mt-3 flex flex-wrap items-center gap-2 text-slate">
                 <span className="rounded-full bg-studio-mist px-2.5 py-1 font-medium text-ink">AI signal</span>
@@ -254,12 +255,14 @@ export default function AdminDashboardPage() {
                 </ul>
               </div>
             )}
-            {(detail.status !== "approved") && (detail.status !== "denied") &&
+            {['pending', 'escalated'].includes(detail.status) && <div className="mt-6 border-t border-hairline-silver pt-6"><label htmlFor="decision-reason" className="block text-sm font-semibold">Decision reason</label><p className="type-small mt-1 text-slate">This explanation will be shown to the customer.</p><textarea id="decision-reason" className="field mt-3 min-h-24 resize-y rounded-2xl" maxLength="2000" required value={decisionReason} onChange={(event) => setDecisionReason(event.target.value)} placeholder="Explain the decision." />{actionError && <div className="mt-3"><ErrorNotice error={actionError} /></div>}<div className="mt-3 flex gap-3"><button className="pill-success" type="button" disabled={loading || !decisionReason.trim()} onClick={() => decideRefund('approve')}>{loading && decision === 'approve' ? 'Approving…' : 'Approve refund'}</button><button className="pill-danger-outline" type="button" disabled={loading || !decisionReason.trim()} onClick={() => decideRefund('reject')}>{loading && decision === 'reject' ? 'Rejecting…' : 'Reject refund'}</button></div></div>}
+            {false && (detail.status !== "approved") && (detail.status !== "denied") &&
               <div className='mt-6 flex gap-3 border-t border-hairline-silver pt-6'>
                 <button className="pill-success" type="submit" disabled={loading} onClick={() => approveRefund(detail.id)}>{loading ? "Working…" : "Accept refund"}</button>
                 <button className="pill-danger-outline" type="submit" disabled={loading} onClick={() => rejectRefund(detail.id)}>{loading ? "Working…" : "Reject refund"}</button>
               </div>
             }
+            <div className="mt-6 border-t border-hairline-silver pt-6"><h4 className="font-semibold">Request conversation</h4><ul className="mt-3 max-h-72 space-y-3 overflow-y-auto">{detail.messages?.map((entry) => <li key={entry.id} className={`rounded-xl p-3 text-sm ${entry.senderType === 'admin' ? 'bg-[#f5faff]' : 'bg-studio-mist'}`}><p className="type-label mb-1 font-semibold text-slate">{entry.senderType === 'admin' ? 'Support' : 'Customer'} · {formatDate(entry.createdAt)}</p><p className="whitespace-pre-wrap">{entry.message}</p></li>)}</ul>{['pending', 'escalated'].includes(detail.status) && <form className="mt-4 space-y-3" onSubmit={sendChat}><label htmlFor="admin-chat" className="block text-sm font-medium">Message customer</label><textarea id="admin-chat" className="field min-h-24 resize-y rounded-2xl" maxLength="2000" value={chatMessage} onChange={(event) => setChatMessage(event.target.value)} required placeholder="Write a message about this request." />{chatError && <ErrorNotice error={chatError} />}<button className="pill-blue" type="submit" disabled={sendingChat || !chatMessage.trim()}>{sendingChat ? 'Sending…' : 'Send message'}</button></form>}</div>
             {['pending', 'escalated'].includes(detail.status) &&
               <form className="mt-6 border-t border-hairline-silver pt-6" onSubmit={askForVerification}>
                 <label className="block text-sm font-semibold" htmlFor="verification-message">Request more information</label>
