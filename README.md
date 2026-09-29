@@ -2,6 +2,9 @@
 
 An AI-powered e-commerce customer support refund system. The system automates and partially abstracts away the need for a human to handle refund erquest at all times. It is AI powered but still maintains integrity and strict business decision making by using AI to categorize requests but leaving the final decision to predefined business rules. When issues have a certain nature that cannot be handled by the system, they are then escalated to a human admin
 
+## Demo link
+`https://www.loom.com/share/2e291e12873f411890ae09f2daa45838`
+
 ## Stack
 
 | Layer      | Technology |
@@ -88,12 +91,16 @@ Copy `.env.example` to `.env` and use your own details for the values
 | `POSTGRES_USER`      | Docker   | Postgres container user |
 | `POSTGRES_PASSWORD`  | Docker   | Postgres container password |
 | `POSTGRES_DB`        | Docker   | Postgres container database name |
+| `POSTGRES_PORT`      | Docker   | Postgres container database port |
 | `DATABASE_URL`       | backend  | Full Postgres connection string |
 | `PORT`               | backend  | API port (default 4000) |
 | `CLIENT_URL`         | backend  | Allowed CORS origin(s) for the frontend |
 | `AUTO_SEED`          | backend  | Seed the DB on startup if empty (`true`/`false`) |
+| `OPENAI_API_KEY`     | backend  | API KEY for LLM provider |
+| `OPENAI_BASE_URL`    | backend  | Base URL for LLM provider |
 | `VITE_API_URL`       | frontend | Base URL the browser uses to call the API |
 
+You can visit `https://openrouter.ai/workspaces/default/keys` to get api keys and the open router base url
 ## Database
 
 ### Schema
@@ -159,3 +166,10 @@ All responses are JSON, wrapped as `{ "data": ... }` for success or
 | GET | `/api/admin/dashboard` | Refund counts by status |
 | GET | `/api/admin/refunds` | List refunds, filterable by `?status=` |
 | GET | `/api/admin/refunds/:refundId` | Full refund detail, including AI/policy fields, notes, and audit log |
+
+
+## How AI integration works
+The applation has a business policy and an AI service file. The AI service takes details of refund requests from customers and using the intructions from the system propmt, it tries to categorize each request and structure them into a specific, organized ouptut. The AI service does not handle decision making, it basically helps with reasoning, calssification and decision support. All final decisions are handles by the defined business policy and requests that cannot be automatically handled by this process (eg: suspicious or conflictiong requests) are escalated for human review.
+
+## Assumptions and tradeoffs
+Assumptions: The AI system isn't supposed to be a final decision maker. It also is not supposed to automatically classify or detect when a customer is not being honest for example about damaged/incorrect items, the same way a human admin wouldn't be able to tell either. Its main purpose is to automate the tasks of the admin and amke the process of requesting for refunds eaasier and faster. It was given key knowledge about the business poilcies and allowed to make classifications based on those policies
