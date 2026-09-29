@@ -1,24 +1,45 @@
 @import "tailwindcss";
 
-/* Design tokens from the Apple style reference. Spacing/radius scales are left at
-   Tailwind defaults on purpose (overriding --spacing-4 etc. would break p-4, gap-4...). */
+/* Design tokens — refined Apple-support-site palette with proper semantic
+   colors for refund states. Spacing/radius scales are left at Tailwind
+   defaults on purpose (overriding --spacing-4 etc. would break p-4, gap-4...). */
 @theme {
   --color-gallery-white: #ffffff;
   --color-studio-mist: #f5f5f7;
-  --color-paper-frost: #fafafc;
-  --color-hairline-silver: #d6d6d6;
-  --color-control-gray: #e6e6e8;
+  --color-paper-frost: #fbfbfd;
+  --color-hairline-silver: #d2d2d7;
+  --color-control-gray: #e8e8ed;
   --color-ink: #1d1d1f;
-  --color-slate: #707070;
+  --color-slate: #6e6e73;
   --color-steel: #86868b;
   --color-apple-blue: #0066cc;
   --color-pricing-blue: #0071e3;
-  --color-launch-orange: #b64400;
+  --color-pricing-blue-dark: #0058b0;
+  --color-launch-orange: #9a5b00;
+
+  /* Semantic status colors — used for refund lifecycle states */
+  --color-success: #1d7a46;
+  --color-success-bg: #e9f7ef;
+  --color-success-border: #bfe6cf;
+  --color-warning: #9a5b00;
+  --color-warning-bg: #fdf3e3;
+  --color-warning-border: #f3ddab;
+  --color-danger: #b3261e;
+  --color-danger-bg: #fbebea;
+  --color-danger-border: #f0c5c2;
+  --color-info: #0058b0;
+  --color-info-bg: #eaf3ff;
+  --color-info-border: #c6dffc;
 
   --font-sf-pro-display: 'SF Pro Display', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'Segoe UI', Roboto, Arial, sans-serif;
   --font-sf-pro-text: 'SF Pro Text', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'Segoe UI', Roboto, Arial, sans-serif;
+  --font-mono-id: 'SF Mono', ui-monospace, 'Menlo', 'Consolas', monospace;
 
   --radius-3xl: 28px;
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px -12px rgba(0, 0, 0, 0.10);
+  --shadow-card-hover: 0 2px 4px rgba(0, 0, 0, 0.05), 0 16px 32px -14px rgba(0, 0, 0, 0.14);
+  --shadow-popover: 0 12px 40px -8px rgba(0, 0, 0, 0.20);
 }
 
 @layer base {
@@ -26,12 +47,14 @@
   @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 
   body {
-    @apply bg-gallery-white text-ink font-sf-pro-text antialiased;
+    @apply bg-paper-frost text-ink font-sf-pro-text antialiased;
     font-size: 17px;
     line-height: 1.47;
     letter-spacing: -0.374px;
   }
-  :focus-visible { outline: 2px solid var(--color-pricing-blue); outline-offset: 2px; }
+  :focus-visible { outline: 2px solid var(--color-pricing-blue); outline-offset: 2px; border-radius: 4px; }
+
+  ::selection { background: #cfe6ff; }
 }
 
 @layer components {
@@ -39,48 +62,160 @@
   .type-hero {
     font-family: var(--font-sf-pro-display);
     font-weight: 600;
-    font-size: clamp(2.5rem, 8vw, 5rem);
-    line-height: 1.05;
-    letter-spacing: -0.015em; /* -1.2px at 80px */
+    font-size: clamp(2.25rem, 6vw, 3.75rem);
+    line-height: 1.07;
+    letter-spacing: -0.015em;
   }
   .type-feature {
     font-family: var(--font-sf-pro-display);
     font-weight: 600;
-    font-size: clamp(1.75rem, 4vw, 2.5rem);
-    line-height: 1.1;
+    font-size: clamp(1.6rem, 3.4vw, 2.25rem);
+    line-height: 1.12;
+    letter-spacing: -0.01em;
   }
   .type-kicker {
     font-family: var(--font-sf-pro-display);
     font-weight: 600;
-    font-size: 21px;
-    line-height: 1;
-    letter-spacing: 0.231px;
+    font-size: 15px;
+    line-height: 1.3;
+    color: var(--color-pricing-blue);
   }
   .type-card-title {
     font-family: var(--font-sf-pro-display);
     font-weight: 600;
-    font-size: 24px;
-    line-height: 1.17;
+    font-size: 21px;
+    line-height: 1.19;
   }
-  .type-small { font-size: 14px; line-height: 1.29; letter-spacing: -0.224px; }
-  .type-label { font-size: 12px; line-height: 1.33; letter-spacing: -0.12px; }
+  .type-small { font-size: 14px; line-height: 1.4; letter-spacing: -0.15px; }
+  .type-label { font-size: 12.5px; line-height: 1.35; letter-spacing: -0.08px; }
+  .type-mono-id { font-family: var(--font-mono-id); font-size: 0.94em; letter-spacing: -0.02em; }
 
-  /* Controls */
-  .pill-blue, .pill-blue-lg, .pill-outline, .pill-disabled {
-    @apply inline-flex items-center justify-center rounded-full whitespace-nowrap;
+  /* Buttons / controls */
+  .pill-blue, .pill-blue-lg, .pill-outline, .pill-disabled, .pill-success, .pill-danger-outline, .pill-ghost {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-full whitespace-nowrap;
+    transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, transform 100ms ease, box-shadow 150ms ease;
   }
-  .pill-blue { @apply bg-pricing-blue px-4 py-2 text-white transition-colors hover:bg-[#0077ed]; font-size: 12px; line-height: 16px; letter-spacing: -0.12px; }
-  .pill-blue-lg { @apply bg-pricing-blue px-6 py-3 text-white transition-colors hover:bg-[#0077ed]; font-size: 17px; line-height: 1.24; }
-  .pill-outline { @apply border border-steel px-4 py-2 text-ink; font-size: 12px; line-height: 16px; letter-spacing: -0.12px; }
-  .pill-disabled { @apply bg-control-gray px-4 py-2 text-slate cursor-not-allowed; font-size: 12px; line-height: 16px; letter-spacing: -0.12px; }
+  .pill-blue, .pill-blue-lg, .pill-success, .pill-danger-outline, .pill-outline { cursor: pointer; }
+  .pill-blue:active, .pill-blue-lg:active, .pill-success:active, .pill-danger-outline:active, .pill-outline:active { transform: scale(0.97); }
 
-  .link-apple { @apply text-apple-blue hover:underline; }
+  .pill-blue {
+    @apply bg-pricing-blue px-4 py-2 font-medium text-white hover:bg-pricing-blue-dark;
+    font-size: 13px; line-height: 18px; letter-spacing: -0.08px;
+    box-shadow: 0 1px 2px rgba(0, 88, 176, 0.25);
+  }
+  .pill-blue-lg {
+    @apply bg-pricing-blue px-6 py-3 font-medium text-white hover:bg-pricing-blue-dark;
+    font-size: 16px; line-height: 1.25;
+    box-shadow: 0 2px 8px rgba(0, 88, 176, 0.28);
+  }
+  .pill-outline {
+    @apply border border-hairline-silver bg-white px-4 py-2 font-medium text-ink hover:border-steel hover:bg-studio-mist;
+    font-size: 13px; line-height: 18px; letter-spacing: -0.08px;
+  }
+  .pill-disabled {
+    @apply bg-control-gray px-4 py-2 font-medium text-steel cursor-not-allowed;
+    font-size: 13px; line-height: 18px; letter-spacing: -0.08px;
+  }
+  .pill-success {
+    background: var(--color-success);
+    @apply px-4 py-2 font-medium text-white;
+    font-size: 13px; line-height: 18px; letter-spacing: -0.08px;
+    box-shadow: 0 1px 2px rgba(29, 122, 70, 0.25);
+  }
+  .pill-success:hover { filter: brightness(1.08); }
+  .pill-danger-outline {
+    border: 1px solid var(--color-danger-border);
+    background: var(--color-danger-bg);
+    color: var(--color-danger);
+    @apply px-4 py-2 font-medium;
+    font-size: 13px; line-height: 18px; letter-spacing: -0.08px;
+  }
+  .pill-danger-outline:hover { background: #f7dcda; }
+  .pill-ghost {
+    @apply px-3 py-1.5 font-medium text-slate hover:text-ink hover:bg-studio-mist;
+    font-size: 13px; line-height: 18px;
+  }
+
+  .link-apple { @apply text-pricing-blue hover:underline; text-underline-offset: 3px; }
 
   /* Surfaces */
-  .card { @apply rounded-3xl bg-gallery-white; padding: 28px; }
-  .field {
-    @apply w-full rounded-full border border-steel bg-gallery-white text-ink;
-    padding: 12px 24px;
-    font-size: 17px;
+  .card {
+    @apply rounded-3xl bg-gallery-white border border-hairline-silver;
+    padding: 28px;
+    box-shadow: var(--shadow-card);
   }
+  .card-flat { @apply rounded-2xl border border-hairline-silver bg-white; }
+
+  .field {
+    @apply w-full rounded-full border border-hairline-silver bg-gallery-white text-ink;
+    padding: 12px 20px;
+    font-size: 16px;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+  }
+  .field:focus { @apply border-pricing-blue; box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.12); outline: none; }
+  .field:disabled { @apply bg-studio-mist text-steel cursor-not-allowed; }
+
+  /* Status badges — shared vocabulary between customer + admin views */
+  .badge-status {
+    @apply inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-medium;
+    font-size: 12.5px; line-height: 1.4; letter-spacing: -0.08px;
+  }
+
+  .badge-pending { background: var(--color-warning-bg); border-color: var(--color-warning-border); color: var(--color-warning); }
+  .badge-approved { background: var(--color-success-bg); border-color: var(--color-success-border); color: var(--color-success); }
+  .badge-denied { background: var(--color-danger-bg); border-color: var(--color-danger-border); color: var(--color-danger); }
+  .badge-escalated { background: var(--color-warning-bg); border-color: var(--color-warning-border); color: var(--color-warning); }
+  .badge-flagged { background: var(--color-danger-bg); color: var(--color-danger); @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5; font-size: 11.5px; font-weight: 600; }
+
+  /* Step indicator — the customer flow genuinely is a 4-step sequence */
+  .step-indicator { @apply flex items-center gap-2; }
+  .step-dot {
+    @apply flex h-6 w-6 shrink-0 items-center justify-center rounded-full font-semibold;
+    font-size: 12px;
+    background: var(--color-control-gray);
+    color: var(--color-steel);
+  }
+  .step-dot[data-state="done"] { background: var(--color-pricing-blue); color: white; }
+  .step-dot[data-state="active"] { background: var(--color-pricing-blue); color: white; box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.15); }
+  .step-line { flex: 1; height: 1px; background: var(--color-hairline-silver); }
+  .step-line[data-state="done"] { background: var(--color-pricing-blue); }
+
+  /* Avatars for customer/admin table rows */
+  .avatar-initials {
+    @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-semibold text-white;
+    font-size: 13px;
+    background: linear-gradient(155deg, var(--color-pricing-blue), var(--color-pricing-blue-dark));
+  }
+
+  /* Stat cards with icon accent (admin dashboard) */
+  .stat-card {
+    @apply rounded-3xl bg-gallery-white border border-hairline-silver flex items-start justify-between gap-4;
+    padding: 22px 24px;
+    box-shadow: var(--shadow-card);
+  }
+  .stat-icon {
+    @apply flex h-10 w-10 shrink-0 items-center justify-center rounded-full;
+  }
+
+  /* Table */
+  .table-refunds thead th {
+    @apply py-3 pr-4 text-left font-medium;
+    font-size: 12.5px;
+    letter-spacing: -0.05px;
+    color: var(--color-steel);
+    border-bottom: 1px solid var(--color-hairline-silver);
+  }
+  .table-refunds tbody tr { border-bottom: 1px solid var(--color-hairline-silver); transition: background-color 120ms ease; }
+  .table-refunds tbody tr:hover { background: var(--color-studio-mist); }
+  .table-refunds tbody td { @apply py-4 pr-4 align-middle; }
+
+  /* Empty / loading states */
+  .empty-state { @apply rounded-2xl border border-hairline-silver bg-white flex flex-col items-center gap-3 px-6 py-14 text-center; }
+
+  .skeleton-line { @apply rounded-full bg-control-gray; height: 12px; animation: skeleton-pulse 1.4s ease-in-out infinite; }
+  @keyframes skeleton-pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+
+  @keyframes fade-in-up { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .animate-settle { animation: fade-in-up 320ms ease both; }
+  @media (prefers-reduced-motion: reduce) { .animate-settle { animation: none; } }
 }

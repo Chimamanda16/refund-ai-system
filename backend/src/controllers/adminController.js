@@ -12,3 +12,24 @@ export async function getRefund(req, res) {
   const { refundId } = req.validated.params;
   res.json({ data: await adminService.getRefundDetail(refundId) });
 }
+
+export async function requestVerification(req, res) {
+  const { refundId } = req.validated.params;
+  const { message } = req.validated.body;
+  res.json({ data: await adminService.requestVerification(refundId, message) });
+}
+
+export async function approveRefund(req, res) {
+  const { refundId } = req.validated.params;
+  res.json({ data: await adminService.approveRefund(refundId, req.validated.body.reason) });
+}
+
+export async function rejectRefund(req, res) {
+  const { refundId } = req.validated.params;
+  res.json({ data: await adminService.rejectRefund(refundId, req.validated.body.reason) });
+}
+
+export async function sendMessage(req, res) {
+  const { refundId } = req.validated.params;
+  res.json({ data: await adminService.sendMessage(refundId, req.validated.body.message) });
+}
